@@ -2,6 +2,8 @@ call plug#begin()
 Plug 'myitcv/govim'
 Plug 'tmhedberg/SimpylFold'
 Plug 'scrooloose/nerdtree'
+Plug 'tpope/vim-fugitive'
+Plug 'w0rp/ale'
 Plug 'dracula/vim', {'as': 'dracula'}
 call plug#end()
 
@@ -116,6 +118,11 @@ nnoremap Y y$
 " Enter automatically into the files directory
 autocmd BufEnter * silent! lcd %:p:h
 
+augroup py
+    autocmd!
+    autocmd BufNewFile,BufRead *.py setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4
+    autocmd BufWritePost *.py call Flake8()
+augroup END
 
 """""""""""""""""""""
 "      Plugins      "
@@ -124,8 +131,14 @@ autocmd BufEnter * silent! lcd %:p:h
 " SimpylFold
 let g:SimpylFold_docstring_preview = 1
 
+" Flake8
+let g:flake8_show_in_gutter = 1
+
 " NERDTree
 map <C-s> :NERDTreeToggle<CR>
 
 " GoVim
 nmap <buffer> <Leader>h : <C-u>call GOVIMHover()<CR>
+
+" ALE
+let g:ale_pattern_options = {'*\.go': {'ale_enabled': 0}}
