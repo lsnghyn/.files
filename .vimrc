@@ -1,20 +1,19 @@
+" Install vim-plug
+" curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 call plug#begin()
 
-"Plug 'tmhedberg/SimpylFold'
-"let g:SimpylFold_docstring_preview = 1
-
 " Colors
-Plug 'cocopon/iceberg.vim'
+Plug 'junegunn/seoul256.vim'
 
 
 " Vim Lightline
-Plug 'gkeep/iceberg-dark'
 Plug 'itchyny/lightline.vim'
-let g:lightline = {'colorscheme': 'icebergDark'}
+let g:lightline = {'colorscheme': 'seoul256'}
 
 
-" Tmux Powerline Generation
+" Tmux Statusline Generation
 Plug 'edkolev/tmuxline.vim'
+let g:tmuxline_powerline_separators = 0
 
 
 " Languages
@@ -30,10 +29,6 @@ augroup yaml
 	au FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 augroup END
 
-Plug 'plasticboy/vim-markdown'
-let g:vim_markdown_new_list_item_indent = 2
-let g:vim_markdown_frontmatter = 1
-
 Plug 'elzr/vim-json'
 let g:vim_json_syntax_conceal = 0
 
@@ -43,8 +38,8 @@ let g:ale_linters = {'python': ['yapf']}
 let g:ale_fixers = {'python': ['remove_trailing_lines', 'trim_whitespace', 'yapf', 'isort']}
 let g:ale_fix_on_save = 1
 augroup py
-    au!
-    au BufNewFile,BufRead *.py setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4
+	au!
+	au BufNewFile,BufRead *.py setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4
 	au FileType python ALEEnable
 augroup END
 
@@ -52,7 +47,8 @@ call plug#end()
 
 " Colors
 syntax enable
-color iceberg
+color seoul256
+let g:seoul256_background = 234
 
 """"""""""""""""""""""
 "      Settings      "
@@ -92,14 +88,17 @@ set nocursorline                " Do not highlight cursor (speeds up highlightin
 set lazyredraw                  " Wait to redraw
 set tabstop=4
 set shiftwidth=4
-set scrolloff=3       			" Sets Scroll offset to keep cursor from edge of screen
-set sidescrolloff=10		    " Sets Scroll offset to keep cursor from edge of screen
-set nostartofline	        	" Keeps cursor in current column when jumping to lines
+set scrolloff=3                 " Sets Scroll offset to keep cursor from edge of screen
+set sidescrolloff=10            " Sets Scroll offset to keep cursor from edge of screen
+set nostartofline               " Keeps cursor in current column when jumping to lines
 set relativenumber              " sets relative number for easier macros          
 set ttymouse=sgr
 set updatetime=500
 set balloondelay=250
 set signcolumn=number
+set background=dark
+set list
+set listchars=tab:▸-,trail:X
 
 if has("patch-8.1.1904")
 	set completeopt+=popup
