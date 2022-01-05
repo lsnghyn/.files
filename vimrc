@@ -16,6 +16,11 @@ Plug 'edkolev/tmuxline.vim'
 let g:tmuxline_powerline_separators = 0
 
 
+" Fuzzy Search
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+
+
 " Languages
 Plug 'govim/govim'
 Plug 'cespare/vim-toml'
@@ -24,7 +29,7 @@ Plug 'ekalinin/Dockerfile.vim'
 
 Plug 'stephpy/vim-yaml'
 augroup yaml
-	au! 
+	au!
 	au BufNewFile,BufReadPost *.{yaml,yml} set filetype=yaml foldmethod=indent
 	au FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 augroup END
@@ -54,6 +59,7 @@ let g:seoul256_background = 234
 "      Settings      "
 """"""""""""""""""""""
 
+syntax on
 set nocompatible                " Enables us Vim specific features
 filetype off                    " Reset filetype detection first ...
 filetype plugin indent on       " ... and enable filetype detection
@@ -72,6 +78,7 @@ set number                      " Show line numbers
 set showcmd                     " Show me what I'm typing
 set noswapfile                  " Don't use swapfile
 set nobackup                    " Don't create annoying backup files
+set nowritebackup
 set splitright                  " Vertical windows should be split to right
 set splitbelow                  " Horizontal windows should split to bottom
 set autowrite                   " Automatically save before :next, :make etc.
@@ -91,11 +98,13 @@ set shiftwidth=4
 set scrolloff=3                 " Sets Scroll offset to keep cursor from edge of screen
 set sidescrolloff=10            " Sets Scroll offset to keep cursor from edge of screen
 set nostartofline               " Keeps cursor in current column when jumping to lines
-set relativenumber              " sets relative number for easier macros          
+set relativenumber              " sets relative number for easier macros
+"set mouse=a
 set ttymouse=sgr
 set updatetime=500
 set balloondelay=250
 set signcolumn=number
+set visualbell
 set background=dark
 set list
 set listchars=tab:▸-,trail:X
@@ -120,17 +129,12 @@ endif
 "      Mappings      "
 """"""""""""""""""""""
 
-" GOVIM
-nmap <silent> <buffer> <C-b> :GOVIMGoToDef<CR>
-nmap <silent> <buffer> <C-t> :GOVIMGoToPrevDef<CR>
-nmap <silent> <buffer> <Leader>h :<C-u>call GOVIMHover()<CR>
+" Set leader shortcut to a comma ','. By default it's the backslash
+let mapleader = ','
 
 " Set Capslock to Escape and Back in Vim
 au VimEnter * :silent !xmodmap -e 'clear Lock' -e 'keycode 0x42 = Escape'
 au VimLeave * :silent !xmodmap -e 'clear Lock' -e 'keycode 0x42 = Caps_Lock'
-
-" Set leader shortcut to a comma ','. By default it's the backslash
-let mapleader = ','
 
 " Move up and down during insert mode
 inoremap <expr> <C-j> pumvisible() ? "<C-n>" : "<C-j>"
@@ -170,3 +174,74 @@ let g:netrw_browse_split = 4
 let g:netrw_altv = 1
 let g:netrw_winsize = 15
 map <C-s> :Vexplore<CR>
+
+" GOVIM
+nmap <silent> <buffer> <C-b> :GOVIMGoToDef<CR>
+nmap <silent> <buffer> <C-t> :GOVIMGoToPrevDef<CR>
+nmap <silent> <buffer> <Leader>h :<C-u>call GOVIMHover()<CR>
+
+nmap <silent> <buffer> <F2> :execute "GOVIMQuickfixDiagnostics" | cw | if len(getqflist()) > 0 && getwininfo(win_getid())[0].quickfix == 1 | :wincmd p | endif<CR>
+imap <silent> <buffer> <F2> <C-O>:execute "GOVIMQuickfixDiagnostics" | cw | if len(getqflist()) > 0 && getwininfo(win_getid())[0].quickfix == 1 | :wincmd p | endif<CR>
+
+" GovimFZFSymbol is a user-defined function that can be called to start fzf in
+" a mode whereby it uses govim's new child-parent capabilities to query the
+" parent govim instance for gopls Symbol method results that then are used to
+" drive fzf.
+function GovimFZFSymbol(queryAddition)
+  let l:expect_keys = join(keys(s:symbolActions), ',')
+  let l:source = join(GOVIMParentCommand(), " ").' gopls Symbol -quickfix'
+  let l:reload = l:source." {q}"
+  call fzf#run(fzf#wrap({
+        \ 'source': l:source,
+        \ 'sink*': function('s:handleSymbol'),
+        \ 'options': [
+        \       '--with-nth', '2..',
+        \       '--expect='.l:expect_keys,
+        \       '--phony',
+        \       '--bind', 'change:reload:'.l:reload
+        \ ]}))
+endfunction
+
+" Map \s to start a symbol search
+"
+" Once you have found the symbol you want:
+"
+" * Enter will open that result in the current window
+" * Ctrl-s will open that result in a split
+" * Ctrl-v will open that result in a vertical split
+" * Ctrl-t will open that result in a new tab
+"
+nmap <Leader>s :call GovimFZFSymbol('')<CR>
+
+" s:symbolActions are the actions that, in addition to plain <Enter>,
+" we want to be able to fire from fzf. Here we map them to the corresponding
+" command in VimScript.
+let s:symbolActions = {
+  \ 'ctrl-t': 'tab split',
+  \ 'ctrl-s': 'split',
+  \ 'ctrl-v': 'vsplit',
+  \ }
+
+" With thanks and reference to github.com/junegunn/fzf.vim/issues/948 which
+" inspired the following
+function! s:handleSymbol(sym) abort
+  " a:sym is a [2]string array where the first element is the
+  " key pressed (or empty if simply Enter), and the second element
+  " is the entry selected in fzf, i.e. the match.
+  "
+  " The match will be of the form:
+  "
+  "   $filename:$line:$col: $match
+  "
+  if len(a:sym) == 0
+    return
+  endif
+  let l:cmd = get(s:symbolActions, a:sym[0], "")
+  let l:match = a:sym[1]
+  let l:parts = split(l:match, ":")
+  execute 'silent' l:cmd
+  execute 'buffer' bufnr(l:parts[0], 1)
+  set buflisted
+  call cursor(l:parts[1], l:parts[2])
+  normal! zz
+endfunction

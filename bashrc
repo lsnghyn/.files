@@ -1,13 +1,25 @@
+# System Defaults
+
+[ -z ${PLATFORM+x} ] && export PLATFORM=$(uname -s)
+[ -f /etc/bashrc ] && . /etc/bashrc
+
+
 # Options
 
-## Append to history
+## Append to the history file, don't overwrite it
 shopt -s histappend
 
-## Check window size after each cmd
+## Check the window size after each command and update the values of LINES and COLUMNS
 shopt -s checkwinsize
 
 ## Bash completion
-[ -f /etc/bash_completion ] && . /etc/bash_completion
+if ! shopt -oq posix; then
+	if [ -f /usr/share/bash-completion/bash_completion ]; then
+		. /usr/share/bash-completion/bash_completion
+	elif [ -f /etc/bash_completion ]; then
+		. /etc/bash_completion
+	fi
+fi
 
 ## Disable CTRL-S and CTRL-Q
 [[ $- =~ i ]] && stty -ixoff -ixon
@@ -23,7 +35,7 @@ export HISTTIMEFORMAT="%Y/%m/%d %H:%M:%S:   "
 [ -z "$TMPDIR" ] && TMPDIR=/tmp
 
 ## Global
-export GOROOT=/usr/local/go
+export GOROOT=/home/goroot
 export GOPATH=$HOME/go
 mkdir -p $GOPATH
 
@@ -53,7 +65,7 @@ tally() {
 
 ## Colored ls
 if [ -x /usr/bin/dircolors ]; then
-	eval "`dircolors -b`"
+	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 	alias ls='ls --color=auto'
 	alias grep='grep --color=auto'
 fi
@@ -62,15 +74,15 @@ fi
 # Prompt
 
 if [ "$PLATFORM" = Linux ]; then
-  PS1="\[\e[1;38m\]\u\[\e[1;34m\]@\[\e[1;31m\]\h\[\e[1;30m\]:"
-  PS1="$PS1\[\e[0;38m\]\w\[\e[1;35m\]> \[\e[0m\]"
+	PS1="\[\e[1;38m\]\u\[\e[1;34m\]@\[\e[1;31m\]\h\[\e[1;30m\]:"
+	PS1="$PS1\[\e[0;38m\]\w\[\e[1;35m\]> \[\e[0m\]"
 else
-  ### git-prompt
-  __git_ps1() { :;}
-  if [ -e ~/.git-prompt.sh ]; then
-    source ~/.git-prompt.sh
-  fi
-  PS1='\[\e[34m\]\u\[\e[1;32m\]@\[\e[0;33m\]\h\[\e[35m\]:\[\e[m\]\w\[\e[1;30m\]$(__git_ps1)\[\e[1;31m\]> \[\e[0m\]'
+	# git-prompt
+	__git_ps1() { :;}
+	if [ -e ~/.git-prompt.sh ]; then
+		source ~/.git-prompt.sh
+	fi
+	PS1='\[\e[34m\]\u\[\e[1;32m\]@\[\e[0;33m\]\h\[\e[35m\]:\[\e[m\]\w\[\e[1;30m\]$(__git_ps1)\[\e[1;31m\]> \[\e[0m\]'
 fi
 
 
@@ -116,12 +128,11 @@ nvm() {
   nvm "$@"
 }
 
-pyenv() {
-	export PYENV_ROOT="$HOME/.pyenv"
-	export PATH="$PYENV_ROOT/bin:$PATH"
-	eval "$(pyenv init -)"
-	eval "$(pyenv virtualenv-init -)"
-}
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
 # https://github.com/cykerway/complete-alias
 # must install bash_completion
