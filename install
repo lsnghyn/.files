@@ -1,0 +1,36 @@
+#!/bin/bash
+# Ripped from https://github.com/junegunn/dotfiles/blob/master/install
+
+cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
+BASE=$(pwd)
+
+# RC Files
+for rc in *rc *profile tmux.conf; do
+	mkdir -pv bak
+	[ -e ~/."$rc" ] && mv -v ~/."$rc" bak/."$rc"
+	ln -svf "$BASE/$rc" ~/."$rc"
+done
+
+# git-prompt
+if [ ! -e ~/.git-prompt.sh ]; then
+	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -o ~/.git-prompt.sh
+fi
+
+# scripts
+mkdir -p ~/bin
+for bin in $BASE/bin/*; do
+	ln -svf "$bin" ~/bin
+done
+
+# TODO: Personal Apt/Homebrew Installs
+
+git config --global user.email "daniel@devshell.net"
+git config --global user.name "Daniel Lee"
+# TODO: Git GPG signing
+#git config --global user.signingKey XXXXXXXX
+#git config --global commit.gpgsign true
+
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+tmux source-file ~/.tmux.conf
+
+./install-vim
