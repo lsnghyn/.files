@@ -1,0 +1,10 @@
+#!/bin/bash
+# uses text secret and oathtool to generate TOTP
+
+dir="$HOME/.2fa"
+target="$1"
+
+[ -z "$target" ] && { echo "Usage: $0 <key>"; exit 1; }
+[ -a "$dir/$target.key" ] || { echo "$target.key not found"; exit 1; }
+
+oathtool -b --totp "$(cat $dir/$target.key)"
