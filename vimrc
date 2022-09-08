@@ -1,70 +1,137 @@
-" Install vim-plug
-" curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-call plug#begin()
+" vim: set foldmethod=marker foldlevel=0 nomodeline:
+" VIM DEFAULTS {{{
 
-" Colors
-Plug 'junegunn/seoul256.vim'
+unlet! skip_defaults_vim
+silent! source $VIMRUNTIME/defaults.vim
 
-
-" Vim Lightline
-Plug 'itchyny/lightline.vim'
-let g:lightline = {'colorscheme': 'seoul256'}
-
-
-" Tmux Statusline Generation
-Plug 'edkolev/tmuxline.vim'
-let g:tmuxline_powerline_separators = 0
-
-
-" Fuzzy Search
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'junegunn/fzf.vim'
-
-
-" Languages
-Plug 'govim/govim'
-Plug 'cespare/vim-toml'
-Plug 'tsandall/vim-rego'
-Plug 'ekalinin/Dockerfile.vim'
-
-Plug 'stephpy/vim-yaml'
-augroup yaml
-	au!
-	au BufNewFile,BufReadPost *.{yaml,yml} set filetype=yaml foldmethod=indent
-	au FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+augroup vimrc
+  autocmd!
 augroup END
 
-Plug 'elzr/vim-json'
-let g:vim_json_syntax_conceal = 0
+let mapleader = ','
+let maplocalleader = ','
 
-Plug 'dense-analysis/ale'
-let g:ale_enabled = 0
-let g:ale_linters = {'python': ['yapf']}
-let g:ale_fixers = {'python': ['remove_trailing_lines', 'trim_whitespace', 'yapf', 'isort']}
-let g:ale_fix_on_save = 1
+" }}}
+" VIM-PLUG {{{
+
+silent! if plug#begin()
+
+" junegunn
+Plug 'junegunn/vim-easy-align'
+Plug 'junegunn/vim-emoji'
+  command! -range EmojiReplace <line1>,<line2>s/:\([^:]\+\):/\=emoji#for(submatch(1), submatch(0))/g
+
+Plug 'junegunn/vim-slash'
+  if has('timers')
+    noremap <expr> <plug>(slash-after) slash#blink(2, 50)
+  endif
+
+Plug 'junegunn/vim-peekaboo'
+Plug 'junegunn/vim-journal'
+Plug 'junegunn/seoul256.vim'
+Plug 'junegunn/gv.vim'
+  function! s:gv_expand()
+    let line = getline('.')
+    GV --name-status
+    call search('\V'.line, 'c')
+    normal! zz
+  endfunction
+  autocmd! FileType GV nnoremap <buffer> <silent> + :call <sid>gv_expand()<cr>
+
+Plug 'junegunn/goyo.vim'
+Plug 'junegunn/limelight.vim'
+  nmap <Leader>l <Plug>(Limelight)
+  xmap <Leader>l <Plug>(Limelight)
+  nnoremap <Leader>ll :Limelight!<cr>
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+"Plug 'junegunn/vim-after-object'
+"  autocmd VimEnter * silent! call after_object#enable('=', ':', '#', ' ', '|')
+
+" tpope
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-endwise'
+Plug 'tpope/vim-commentary'
+  map  gc  <Plug>Commentary
+  nmap gcc <Plug>CommentaryLine
+Plug 'tpope/vim-fugitive'
+  nmap     <Leader>g :Git<CR>gg<c-n>
+  nnoremap <Leader>d :Gdiff<CR>
+Plug 'tpope/vim-rhubarb'
+Plug 'tpope/vim-vinegar'
+
+" Others
+Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
+  let g:undotree_WindowLayout = 2
+  nnoremap U :UndotreeToggle<CR>
+Plug 'vim-scripts/ReplaceWithRegister'
+Plug 'AndrewRadev/splitjoin.vim'
+  let g:splitjoin_split_mapping = ''
+  let g:splitjoin_join_mapping = ''
+  nnoremap gss :SplitjoinSplit<cr>
+  nnoremap gsj :SplitjoinJoin<cr>
+
+Plug 'rhysd/git-messenger.vim'
+Plug 'mhinz/vim-signify'
+  let g:signify_vcs_list = ['git']
+  let g:signifundotreey_skip_filetype = { 'journal': 1 }
+  let g:signify_sign_add          = '│'
+  let g:signify_sign_change       = '│'
+  let g:signify_sign_changedelete = '│'
+
+Plug 'preservim/tagbar', { 'on': 'TagbarToggle' }
+  let g:tagbar_sort = 0
+Plug 'justinmk/vim-gtfo'
+
+Plug 'vim-syntastic/syntastic'
+
+" Languages
+if v:version >= 800
+  Plug 'fatih/vim-go', { 'do': ':GoInstallBinaries' }
+endif
+Plug 'honza/dockerfile.vim'
+Plug 'chrisbra/unicode.vim', { 'for': 'journal' }
+Plug 'rust-lang/rust.vim'
+  let g:rustfmt_autosave = 1
+Plug 'ferrine/md-img-paste.vim'
+  autocmd FileType markdown nnoremap <buffer> <silent> <leader>v :call mdip#MarkdownClipboardImage()<CR>
+  let g:mdip_imgdir = 'images'
+  let g:mdip_imgname = 'image'
+Plug 'mzlogin/vim-markdown-toc'
+
 augroup py
 	au!
 	au BufNewFile,BufRead *.py setlocal expandtab tabstop=4 softtabstop=4 shiftwidth=4
-	au FileType python ALEEnable
 augroup END
 
+Plug 'w0rp/ale'
+  let g:ale_linters = {'yaml': []}
+  let g:ale_fixers = {
+        \ '*': ['remove_trailing_lines', 'trim_whitespace'],
+        \ 'c': ['clang-format'],
+        \ 'cpp': ['clang-format']
+        \ }
+  let g:ale_fix_on_save = 1
+  let g:ale_c_clangformat_use_local_file = 1
+  let g:ale_lint_delay = 1000
+  nmap ]a <Plug>(ale_next_wrap)
+  nmap [a <Plug>(ale_previous_wrap)
+
 call plug#end()
+endif
 
+" }}}
+" Settings {{{
+"
 " Colors
-syntax enable
-color seoul256
+silent! colo seoul256
 let g:seoul256_background = 234
-
-""""""""""""""""""""""
-"      Settings      "
-""""""""""""""""""""""
 
 syntax on
 set nocompatible                " Enables us Vim specific features
 filetype off                    " Reset filetype detection first ...
 filetype plugin indent on       " ... and enable filetype detection
-set ttyfast                     " Indicate fast terminal conn for faster redraw
-set ttyscroll=3                 " Speedup scrolling
 set laststatus=2                " Show status line always
 set encoding=utf-8              " Set default encoding to UTF-8
 set autoread                    " Automatically read changed files
@@ -93,155 +160,284 @@ set pumheight=10                " Completion window max size
 set nocursorcolumn              " Do not highlight column (speeds up highlighting)
 set nocursorline                " Do not highlight cursor (speeds up highlighting)
 set lazyredraw                  " Wait to redraw
-set tabstop=4
-set shiftwidth=4
-set scrolloff=3                 " Sets Scroll offset to keep cursor from edge of screen
+set tabstop=2
+set shiftwidth=2
+set expandtab
+set smarttab
+set scrolloff=5                 " Sets Scroll offset to keep cursor from edge of screen
 set sidescrolloff=10            " Sets Scroll offset to keep cursor from edge of screen
 set nostartofline               " Keeps cursor in current column when jumping to lines
 set relativenumber              " sets relative number for easier macros
-"set mouse=a
-set ttymouse=sgr
+set timeoutlen=500
 set updatetime=500
-set balloondelay=250
 set signcolumn=number
 set visualbell
 set background=dark
 set list
 set listchars=tab:▸-,trail:X
+set virtualedit=block
+set nojoinspaces
+set diffopt=filler,vertical
+set clipboard=unnamed
+set foldlevelstart=99
+
+set formatoptions+=1
+if has('patch-7.3.541')
+  set formatoptions+=j
+endif
+if has('patch-7.4.338')
+  let &showbreak = '↳ '
+  set breakindent
+  set breakindentopt=sbr
+endif
+
+if has('termguicolors')
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+  set termguicolors
+endif
+
+function! s:statusline_expr()
+  let mod = "%{&modified ? '[+] ' : !&modifiable ? '[x] ' : ''}"
+  let ro  = "%{&readonly ? '[RO] ' : ''}"
+  let ft  = "%{len(&filetype) ? '['.&filetype.'] ' : ''}"
+  let fug = "%{exists('g:loaded_fugitive') ? fugitive#statusline() : ''}"
+  let sep = ' %= '
+  let pos = ' %-12(%l : %c%V%) '
+  let pct = ' %P'
+
+  return '[%n] %F %<'.mod.ro.ft.fug.sep.pos.'%*'.pct
+endfunction
+let &statusline = s:statusline_expr()
+
+" mouse
+silent! set ttymouse=xterm2
+set mouse=a
+
+" 80 chars/line
+set textwidth=0
+if exists('&colorcolumn')
+  set colorcolumn=80
+endif
 
 if has("patch-8.1.1904")
 	set completeopt+=popup
 	set completepopup=align:menu,border:off,highlight:Pmenu
 endif
 
-" Enable to copy to clipboard for operations like yank, delete, change and put
-" http://stackoverflow.com/questions/20186975/vim-mac-how-to-copy-to-clipboard-without-pbcopy
-set clipboard^=unnamed
+" ctags
+set tags=./tags;/
 
-" This enables us to undo files even if you exit Vim.
+" Annoying temporary files
+set backupdir=/tmp//,.
+set directory=/tmp//,.
+
+" Semi-persistent undo
 if has('persistent_undo')
+  set undodir=/tmp,.
   set undofile
-  set undodir=~/.config/vim/tmp/undo//
 endif
 
+if exists('&fixeol')
+  set nofixeol
+endif
 
-""""""""""""""""""""""
-"      Mappings      "
-""""""""""""""""""""""
+" }}}
+" Mappings {{{
 
-" Set leader shortcut to a comma ','. By default it's the backslash
-let mapleader = ','
+noremap <C-F> <C-D>
+noremap <C-B> <C-U>
 
-" Set Capslock to Escape and Back in Vim
-au VimEnter * :silent !xmodmap -e 'clear Lock' -e 'keycode 0x42 = Escape'
-au VimLeave * :silent !xmodmap -e 'clear Lock' -e 'keycode 0x42 = Caps_Lock'
+" Open new line below and above current line
+nnoremap <leader>o o<esc>
+nnoremap <leader>O O<esc>
 
-" Move up and down during insert mode
-inoremap <expr> <C-j> pumvisible() ? "<C-n>" : "<C-j>"
-inoremap <expr> <C-k> pumvisible() ? "<C-p>" : "<C-k>"
+" Save
+inoremap <C-s>     <C-O>:update<cr>
+nnoremap <C-s>     :update<cr>
+nnoremap <leader>s :update<cr>
+nnoremap <leader>w :update<cr>
 
-" Exec Omni easier
-inoremap <C-@> <C-x><C-o>
+" Disable CTRL-A on tmux or on screen
+if $TERM =~ 'screen'
+  nnoremap <C-a> <nop>
+  nnoremap <Leader><C-a> <C-a>
+endif
 
-" Jump to next error with Ctrl-n and previous error with Ctrl-m. Close the
-" quickfix window with <leader>a
-map <C-n> :cnext<CR>
-map <C-m> :cprevious<CR>
-nnoremap <leader>a :cwindow<CR>
-nnoremap <leader>c :cclose<CR>
+" Quit
+inoremap <C-Q>     <esc>:q<cr>
+nnoremap <C-Q>     :q<cr>
+vnoremap <C-Q>     <esc>
+nnoremap <Leader>q :q<cr>
+nnoremap <Leader>Q :qa!<cr>
 
-" Visual linewise up and down by default (and use gj gk to go quicker)
-noremap <Up> gk
-noremap <Down> gj
-noremap j gj
-noremap k gk
+" Tags
+nnoremap <C-]> g<C-]>
+nnoremap g[ :pop<cr>
 
-" Search mappings: These will make it so that going to the next one in a
-" search will center on the line it's found in.
-nnoremap n nzzzv
-nnoremap N Nzzzv
+" Jump list (to newer position)
+nnoremap <C-p> <C-i>
 
-" Act like D and C
+" jk | Escaping!
+inoremap jk <Esc>
+xnoremap jk <Esc>
+cnoremap jk <C-c>
+
+" Movement in insert mode
+inoremap <C-h> <C-o>h
+inoremap <C-l> <C-o>a
+inoremap <C-j> <C-o>j
+inoremap <C-k> <C-o>k
+inoremap <C-^> <C-o><C-^>
+
+" Make Y behave like other capitals
 nnoremap Y y$
+
+" qq to record, Q to replay
+nnoremap Q @q
+
+" quickfix
+nnoremap ]q :cnext<cr>zz
+nnoremap [q :cprev<cr>zz
+nnoremap ]l :lnext<cr>zz
+nnoremap [l :lprev<cr>zz
+
+" buffers
+nnoremap ]b :bnext<cr>
+nnoremap [b :bprev<cr>
+
+" Tabs
+nnoremap ]t :tabn<cr>
+nnoremap [t :tabp<cr>
+
+" <tab> / <s-tab> | Circular windows navigation
+nnoremap <tab>   <c-w>w
+nnoremap <S-tab> <c-w>W
+
+" Moving lines
+nnoremap <silent> <C-k> :move-2<cr>
+nnoremap <silent> <C-j> :move+<cr>
+nnoremap <silent> <C-h> <<
+nnoremap <silent> <C-l> >>
+xnoremap <silent> <C-k> :move-2<cr>gv
+xnoremap <silent> <C-j> :move'>+<cr>gv
+xnoremap <silent> <C-h> <gv
+xnoremap <silent> <C-l> >gv
+xnoremap < <gv
+xnoremap > >gv
+
+" <Leader>c Close quickfix/location window
+nnoremap <leader>c :cclose<bar>lclose<cr>
+
+" <leader>bs | buf-search
+nnoremap <leader>bs :cex []<BAR>bufdo vimgrepadd @@g %<BAR>cw<s-left><s-left><right>
 
 " Enter automatically into the files directory
 au BufEnter * silent! lcd %:p:h
 
-" netrw
-let g:netrw_banner = 0
-let g:netrw_liststyle = 3
-let g:netrw_browse_split = 4
-let g:netrw_altv = 1
-let g:netrw_winsize = 15
-map <C-s> :Vexplore<CR>
+"NetRW
+let g:netrw_list_hide = '\(^\|\s\s\)\zs\.\S\+'
 
-" GOVIM
-nmap <silent> <buffer> <C-b> :GOVIMGoToDef<CR>
-nmap <silent> <buffer> <C-t> :GOVIMGoToPrevDef<CR>
-nmap <silent> <buffer> <Leader>h :<C-u>call GOVIMHover()<CR>
+" }}}
+" PLUGINS {{{
+" <Enter> | vim-easy-align
+let g:easy_align_delimiters = {
+\ '>': { 'pattern': '>>\|=>\|>' },
+\ '\': { 'pattern': '\\' },
+\ '/': { 'pattern': '//\+\|/\*\|\*/', 'delimiter_align': 'l', 'ignore_groups': ['!Comment'] },
+\ ']': {
+\     'pattern':       '\]\zs',
+\     'left_margin':   0,
+\     'right_margin':  1,
+\     'stick_to_left': 0
+\   },
+\ ')': {
+\     'pattern':       ')\zs',
+\     'left_margin':   0,
+\     'right_margin':  1,
+\     'stick_to_left': 0
+\   },
+\ 'f': {
+\     'pattern': ' \(\S\+(\)\@=',
+\     'left_margin': 0,
+\     'right_margin': 0
+\   },
+\ 'd': {
+\     'pattern': ' \ze\S\+\s*[;=]',
+\     'left_margin': 0,
+\     'right_margin': 0
+\   }
+\ }
 
-nmap <silent> <buffer> <F2> :execute "GOVIMQuickfixDiagnostics" | cw | if len(getqflist()) > 0 && getwininfo(win_getid())[0].quickfix == 1 | :wincmd p | endif<CR>
-imap <silent> <buffer> <F2> <C-O>:execute "GOVIMQuickfixDiagnostics" | cw | if len(getqflist()) > 0 && getwininfo(win_getid())[0].quickfix == 1 | :wincmd p | endif<CR>
+" Start interactive EasyAlign in visual mode
+xmap ga <Plug>(EasyAlign)
 
-" GovimFZFSymbol is a user-defined function that can be called to start fzf in
-" a mode whereby it uses govim's new child-parent capabilities to query the
-" parent govim instance for gopls Symbol method results that then are used to
-" drive fzf.
-function GovimFZFSymbol(queryAddition)
-  let l:expect_keys = join(keys(s:symbolActions), ',')
-  let l:source = join(GOVIMParentCommand(), " ").' gopls Symbol -quickfix'
-  let l:reload = l:source." {q}"
-  call fzf#run(fzf#wrap({
-        \ 'source': l:source,
-        \ 'sink*': function('s:handleSymbol'),
-        \ 'options': [
-        \       '--with-nth', '2..',
-        \       '--expect='.l:expect_keys,
-        \       '--phony',
-        \       '--bind', 'change:reload:'.l:reload
-        \ ]}))
-endfunction
+" Start interactive EasyAlign with a Vim movement
+nmap ga <Plug>(EasyAlign)
+nmap gaa ga_
 
-" Map \s to start a symbol search
-"
-" Once you have found the symbol you want:
-"
-" * Enter will open that result in the current window
-" * Ctrl-s will open that result in a split
-" * Ctrl-v will open that result in a vertical split
-" * Ctrl-t will open that result in a new tab
-"
-nmap <Leader>s :call GovimFZFSymbol('')<CR>
+xmap <Leader>ga <Plug>(LiveEasyAlign)
 
-" s:symbolActions are the actions that, in addition to plain <Enter>,
-" we want to be able to fire from fzf. Here we map them to the corresponding
-" command in VimScript.
-let s:symbolActions = {
-  \ 'ctrl-t': 'tab split',
-  \ 'ctrl-s': 'split',
-  \ 'ctrl-v': 'vsplit',
-  \ }
 
-" With thanks and reference to github.com/junegunn/fzf.vim/issues/948 which
-" inspired the following
-function! s:handleSymbol(sym) abort
-  " a:sym is a [2]string array where the first element is the
-  " key pressed (or empty if simply Enter), and the second element
-  " is the entry selected in fzf, i.e. the match.
-  "
-  " The match will be of the form:
-  "
-  "   $filename:$line:$col: $match
-  "
-  if len(a:sym) == 0
-    return
+" goyo.vim + limelight.vim
+let g:limelight_paragraph_span = 1
+let g:limelight_priority = -1
+
+function! s:goyo_enter()
+  if has('gui_running')
+    set fullscreen
+    set background=light
+    set linespace=7
+  elseif exists('$TMUX')
+    silent !tmux set status off
   endif
-  let l:cmd = get(s:symbolActions, a:sym[0], "")
-  let l:match = a:sym[1]
-  let l:parts = split(l:match, ":")
-  execute 'silent' l:cmd
-  execute 'buffer' bufnr(l:parts[0], 1)
-  set buflisted
-  call cursor(l:parts[1], l:parts[2])
-  normal! zz
+  Limelight
+  let &l:statusline = '%M'
+  hi StatusLine ctermfg=red guifg=red cterm=NONE gui=NONE
 endfunction
+
+function! s:goyo_leave()
+  if has('gui_running')
+    set nofullscreen
+    set background=dark
+    set linespace=0
+  elseif exists('$TMUX')
+    silent !tmux set status on
+  endif
+  Limelight!
+endfunction
+
+autocmd! User GoyoEnter nested call <SID>goyo_enter()
+autocmd! User GoyoLeave nested call <SID>goyo_leave()
+
+nnoremap <Leader>G :Goyo<CR>
+" }}}
+" AUTOCMD {{{
+augroup vimrc
+  au BufWritePost vimrc,.vimrc nested if expand('%') !~ 'fugitive' | source % | endif
+
+  " File types
+  au BufNewFile,BufRead *.icc               set filetype=cpp
+  au BufNewFile,BufRead *.pde               set filetype=java
+  au BufNewFile,BufRead Dockerfile*         set filetype=dockerfile
+
+  " Fugitive
+  au FileType gitcommit setlocal completefunc=emoji#complete
+  au FileType gitcommit nnoremap <buffer> <silent> cd :<C-U>Gcommit --amend --date="$(date)"<CR>
+
+  " http://vim.wikia.com/wiki/Highlight_unwanted_spaces
+  au BufNewFile,BufRead,InsertLeave * silent! match ExtraWhitespace /\s\+$/
+  au InsertEnter * silent! match ExtraWhitespace /\s\+\%#\@<!$/
+
+  " Unset paste on InsertLeave
+  au InsertLeave * silent! set nopaste
+
+  " Close preview window
+  if exists('##CompleteDone')
+    au CompleteDone * pclose
+  else
+    au InsertLeave * if !pumvisible() && (!exists('*getcmdwintype') || empty(getcmdwintype())) | pclose | endif
+  endif
+augroup END
+
+" }}}

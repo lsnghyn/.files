@@ -35,13 +35,13 @@ export HISTTIMEFORMAT="%Y/%m/%d %H:%M:%S:   "
 [ -z "$TMPDIR" ] && TMPDIR=/tmp
 
 ## Global
-export GOROOT=/home/goroot
+export GOROOT=/home/go
 export GOPATH=$HOME/go
 mkdir -p $GOPATH
 
 export LANG=en_US.UTF-8
 export EDITOR=vim
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin:$HOME/bin
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin:$HOME/bin:/sbin
 
 
 # Aliases
@@ -74,15 +74,15 @@ fi
 # Prompt
 
 if [ "$PLATFORM" = Linux ]; then
-	PS1="\[\e[1;38m\]\u\[\e[1;34m\]@\[\e[1;31m\]\h\[\e[1;30m\]:"
-	PS1="$PS1\[\e[0;38m\]\w\[\e[1;35m\]> \[\e[0m\]"
-else
 	# git-prompt
 	__git_ps1() { :;}
 	if [ -e ~/.git-prompt.sh ]; then
 		source ~/.git-prompt.sh
 	fi
 	PS1='\[\e[34m\]\u\[\e[1;32m\]@\[\e[0;33m\]\h\[\e[35m\]:\[\e[m\]\w\[\e[1;30m\]$(__git_ps1)\[\e[1;31m\]> \[\e[0m\]'
+else
+	PS1="\[\e[1;38m\]\u\[\e[1;34m\]@\[\e[1;31m\]\h\[\e[1;30m\]:"
+	PS1="$PS1\[\e[0;38m\]\w\[\e[1;35m\]> \[\e[0m\]"
 fi
 
 
@@ -128,18 +128,26 @@ nvm() {
   nvm "$@"
 }
 
+# rust
+. "$HOME/.cargo/env"
+
+# ghidra
+export PATH=$PATH:/home/ghidra_10.0.2
+
 # pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+#export PYENV_ROOT="$HOME/.pyenv"
+#export PATH="$PYENV_ROOT/bin:$PATH"
+#eval "$(pyenv init -)"
+#eval "$(pyenv virtualenv-init -)"
 
 # https://github.com/cykerway/complete-alias
 # must install bash_completion
 #source $HOME/.bash_complete_alias
 
 ## kube tools
-export KUBE_EDITOR=vim
-source $HOME/.completion/kubectl
+#export KUBE_EDITOR=vim
+#source $HOME/.completion/kubectl
 #alias k=kubectl
 #complete -F _complete_alias k
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
