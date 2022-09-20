@@ -11,18 +11,32 @@ for rc in *rc *profile tmux.conf; do
 	ln -svf "$BASE/$rc" ~/."$rc"
 done
 
-# git-prompt
-if [ ! -e ~/.git-prompt.sh ]; then
-	curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -o ~/.git-prompt.sh
-fi
-
 # scripts
 mkdir -p ~/bin
 for bin in $BASE/bin/*; do
 	ln -svf "$bin" ~/bin
 done
 
-# TODO: Personal Apt/Homebrew Installs
+if [ "$(uname -s)" = 'Darwin' ]; then
+	[ -z "$(which brew)" ] &&
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+	echo "Updating brews"
+	brew install --cask \
+		iterm2 keepingyouawake rectangle \
+		karabiner-elements maccy tailscale \
+    macfuse openmtp
+
+	brew install \
+		fd age ripgrep coreutils zsh git \
+		gnupg pass tree vim wget jq python \
+		go tmux bat translate-shell oath-toolkit
+
+	brew tap universal-ctags/universal-ctags
+	brew install --HEAD universal-ctags
+else
+	rm -f ~/.tmux.conf
+fi
 
 git config --global user.email "daniel@devshell.net"
 git config --global user.name "Daniel Lee"
