@@ -23,14 +23,21 @@ if [ "$(uname -s)" = 'Darwin' ]; then
 
 	echo "Updating brews"
 	brew install --cask \
-		iterm2 keepingyouawake rectangle \
-		karabiner-elements maccy tailscale \
-    macfuse openmtp
+		ghostty \
+		obsidian \
+		keepingyouawake \
+		appcleaner \
+		openmtp
 
 	brew install \
-		fd age ripgrep coreutils zsh git \
-		gnupg pass tree vim wget jq python \
-		go tmux bat translate-shell oath-toolkit
+		fd age ripgrep coreutils \
+		zsh git \
+		gnupg pass pass-otp \
+		tree vim wget jq \
+		yazi poppler fastfetch \
+		python go node \
+		tmux bat bat-extras \
+		translate-shell
 
 	brew tap universal-ctags/universal-ctags
 	brew install --HEAD universal-ctags
